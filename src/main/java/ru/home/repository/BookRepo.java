@@ -17,7 +17,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 public class BookRepo {
@@ -126,34 +125,38 @@ public class BookRepo {
     }
 
     public void borrowBook(String title, String author, UserIdRequestDto userIdRequestDto) {
-        BookAvailableResponseDto book = isBookAvailable(title, author);
-        if (Objects.nonNull(book)) {
-            String query = "INSERT INTO borrowed_books (user_id, isbn, borrow_day, return_day) VALUES (?, ?, ?, ?);";
-            String queryUnAvailable = "UPDATE %s SET available = ? WHERE ibsn = ?".formatted(BOOK_TABLE);
-            try (PreparedStatement statement = connection.prepareStatement(query);
-                 PreparedStatement statement2 = connection.prepareStatement(queryUnAvailable)) {
-                connection.setAutoCommit(false);
-                statement.setLong(FIRST_INDEX, userIdRequestDto.userId());
-                statement.setString(SECOND_INDEX, book.isbn());
-                statement.setObject(THIRD_INDEX, LocalDate.now());
-                statement.setObject(4, LocalDate.now().plusDays(7));
-                statement.executeUpdate();
+        String query = """
+                INSERT INTO borrowed_books (user_id, isbn, borrow_day, return_day) 
+                SELECT ?, b.isbn, ?, ?
+                FROM books b
+                WHERE b.title = ? AND b.author = ? AND b.available = true;""";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            connection.setAutoCommit(false);
+            statement.setLong(FIRST_INDEX, userIdRequestDto.userId());
+            statement.setObject(SECOND_INDEX, LocalDate.now());
+            statement.setObject(THIRD_INDEX, LocalDate.now().plusDays(7));
+            statement.setString(4, title);
+            statement.setString(5, author);
 
-                statement2.setBoolean(FIRST_INDEX, false);
-                statement2.setString(SECOND_INDEX, book.isbn());
-                statement2.executeUpdate();
-                connection.commit();
-            } catch (Exception e) {
-                if(connection !=null) {
-                    try {
-                        connection.rollback();
-                    } catch (SQLException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-                throw new RuntimeException(e);
+            if (statement.executeUpdate() != INVALID_ID) {
+                changeAvailability(title, author);
             }
+
+            connection.commit();
+        } catch (Exception e) {
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            throw new RuntimeException(e);
         }
+    }
+
+    private void changeAvailability(String title, String author) {
+        
     }
 
     public BookAvailableResponseDto isBookAvailable(String title, String author) {
