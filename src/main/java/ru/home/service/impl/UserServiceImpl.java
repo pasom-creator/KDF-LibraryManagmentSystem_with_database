@@ -1,11 +1,11 @@
 package ru.home.service.impl;
 
 import ru.home.dto.request.UserCreateRequestDto;
-import ru.home.dto.request.UserUpdateRequestDto;
-import ru.home.dto.response.BookBorrowedResponseDto;
 import ru.home.dto.response.UserByIdResponseDto;
 import ru.home.dto.response.UserByTypeResponseDto;
 import ru.home.dto.response.UserInfoResponseDto;
+import ru.home.dto.response.UserTypeByIdResponseDto;
+import ru.home.model.UserType;
 import ru.home.repository.UserRepo;
 import ru.home.service.UserService;
 import ru.home.validation.UserValidator;
@@ -15,25 +15,33 @@ import java.util.Map;
 import java.util.Optional;
 
 public class UserServiceImpl implements UserService {
-    private final UserRepo libraryUsers;
-    private final BookServiceImpl bookService;
+    private final UserRepo userStorage;
 
     public UserServiceImpl() {
-        this.libraryUsers = new UserRepo();
-        this.bookService = new BookServiceImpl();
+        this.userStorage = new UserRepo();
     }
 
     @Override
     public void createUser(UserCreateRequestDto userCreateRequestDto) {
         UserValidator.userNameValidator(userCreateRequestDto.name());
         UserValidator.userEmailValidator(userCreateRequestDto.email());
-        System.out.printf("Создан пользователь с id %d\n", libraryUsers.createUser(userCreateRequestDto));
+        System.out.printf("Создан пользователь с id %d\n", userStorage.createUser(userCreateRequestDto));
+    }
+
+    @Override
+    public void removeUser(Long id) {
+        UserValidator.userId(id);
+        if (userStorage.removeUser(id)) {
+            System.out.printf("Пользователь с id %d успешно удалён\n", id);
+        }
+
+        System.out.printf("Пользователь с id %d не найден в системе\n", id);
     }
 
     @Override
     public void getUserInfoById(Long id) {
         UserValidator.userId(id);
-        Optional<UserByIdResponseDto> optUser = libraryUsers.getUserInfoById(id);
+        Optional<UserByIdResponseDto> optUser = userStorage.getUserInfoById(id);
         if (optUser.isPresent()) {
             UserByIdResponseDto user = optUser.get();
             System.out.println(user);
@@ -44,34 +52,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void listAllUsers() {
-        Map<Long, UserInfoResponseDto> usersMap = libraryUsers.listAllUsers();
+        Map<Long, UserInfoResponseDto> usersMap = userStorage.listAllUsers();
         for (Map.Entry<Long, UserInfoResponseDto> userEntry : usersMap.entrySet()) {
             System.out.println(userEntry.getValue());
         }
     }
 
-    @Override
-    public void removeUser(Long id) {
-        UserValidator.userId(id);
-        if (libraryUsers.removeUser(id)) {
-            System.out.printf("Пользователь с id %d успешно удалён\n", id);
-        }
-
-        System.out.printf("Пользователь с id %d не найден в системе\n", id);
-    }
-
-    @Override
-    public boolean updateUserInfo(Long id, UserUpdateRequestDto userUpdateRequestDto) {
-        return libraryUsers.updateUserInfo(id, userUpdateRequestDto);
-    }
-
     public void sortUsersByType() {
-        if (!libraryUsers.sortUsersByType().isEmpty()) {
-            for (Map.Entry<String, List<UserByTypeResponseDto>> userEntry : libraryUsers.sortUsersByType().entrySet()) {
+        if (!userStorage.sortUsersByType().isEmpty()) {
+            for (Map.Entry<String, List<UserByTypeResponseDto>> userEntry : userStorage.sortUsersByType().entrySet()) {
                 System.out.println(userEntry.getKey() + " : " + userEntry.getValue());
             }
         } else {
             System.out.println("Список пользователей пуст");
         }
+    }
+
+    public UserType getUserTypeById(Long id) {
+        UserValidator.userId(id);
+        Optional<UserTypeByIdResponseDto> optUserType = userStorage.getUserTypeById(id);
+        if(optUserType.isPresent()) {
+            return optUserType.get().type();
+        }
+        throw new IllegalArgumentException("Пользателя с таким id не существует");
     }
 }

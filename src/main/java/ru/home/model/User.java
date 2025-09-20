@@ -7,7 +7,7 @@ public class User {
     private Long userId;
     private String name;
     private String email;
-    private final List<String> BORROWED_BOOKS;
+    private final List<BorrowedBook> BORROWED_BOOKS;
 
     public User(String name, String email) {
         this.name = name;
@@ -34,7 +34,7 @@ public class User {
         return email;
     }
 
-    public List<String> getBORROWED_BOOKS() {
+    public List<BorrowedBook> getBORROWED_BOOKS() {
         return BORROWED_BOOKS;
     }
 }

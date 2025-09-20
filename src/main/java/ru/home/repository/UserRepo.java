@@ -1,11 +1,11 @@
 package ru.home.repository;
 
 import ru.home.dto.request.UserCreateRequestDto;
-import ru.home.dto.request.UserUpdateRequestDto;
 import ru.home.dto.response.BookBorrowedResponseDto;
 import ru.home.dto.response.UserByIdResponseDto;
 import ru.home.dto.response.UserByTypeResponseDto;
 import ru.home.dto.response.UserInfoResponseDto;
+import ru.home.dto.response.UserTypeByIdResponseDto;
 import ru.home.exception.DataBaseConnectionException;
 import ru.home.model.UserType;
 import ru.home.util.DatabaseConnection;
@@ -59,18 +59,6 @@ public class UserRepo {
         String queryDeleteUser = "DELETE FROM %s WHERE id = ?;".formatted(USER_TABLE);
         try (PreparedStatement statement = connection.prepareStatement(queryDeleteUser)) {
             statement.setLong(FIRST_INDEX, id);
-            return statement.executeUpdate() != INVALID_ID;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public boolean updateUserInfo(Long id, UserUpdateRequestDto request) {
-        String queryUpdateUserInfo = "UPDATE %s SET name = ?, email = ? WHERE id = ?;".formatted(USER_TABLE);
-        try (PreparedStatement statement = connection.prepareStatement(queryUpdateUserInfo)) {
-            statement.setString(FIRST_INDEX, request.name());
-            statement.setString(SECOND_INDEX, request.email());
-            statement.setLong(THIRD_INDEX, id);
             return statement.executeUpdate() != INVALID_ID;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -142,6 +130,21 @@ public class UserRepo {
             throw new RuntimeException(e);
         }
         return userMap;
+    }
+
+    public Optional<UserTypeByIdResponseDto> getUserTypeById(Long id) {
+        String query = "SELECT user_type FROM %s WHERE id = ?;".formatted(USER_TABLE);
+        try(PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setLong(FIRST_INDEX,id);
+            ResultSet resultSet = statement.executeQuery();
+            if(resultSet.next()) {
+                return Optional.of(
+                        new UserTypeByIdResponseDto(UserType.valueOf(resultSet.getString("user_type"))));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return Optional.empty();
     }
 
     private UserByTypeResponseDto builder(ResultSet resultSet) throws SQLException {
