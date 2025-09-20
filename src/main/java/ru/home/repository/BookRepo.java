@@ -1,7 +1,7 @@
 package ru.home.repository;
 
 import ru.home.dto.request.BookAddRequestDto;
-import ru.home.dto.request.UserIdRequestDto;
+import ru.home.dto.request.UserIdTypeRequestDto;
 import ru.home.dto.response.BookAuthorResponseDto;
 import ru.home.dto.response.BookAvailableResponseDto;
 import ru.home.dto.response.BookBorrowedResponseDto;
@@ -13,10 +13,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class BookRepo {
@@ -124,54 +126,72 @@ public class BookRepo {
         return listBooks;
     }
 
-    public void borrowBook(String title, String author, UserIdRequestDto userIdRequestDto) {
+    public void borrowBook(String title, String author, UserIdTypeRequestDto userIdTypeRequestDto) {
         String query = """
                 INSERT INTO borrowed_books (user_id, isbn, borrow_day, return_day) 
                 SELECT ?, b.isbn, ?, ?
                 FROM books b
                 WHERE b.title = ? AND b.author = ? AND b.available = true;""";
+        int status = 0;
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             connection.setAutoCommit(false);
-            statement.setLong(FIRST_INDEX, userIdRequestDto.userId());
+            statement.setLong(FIRST_INDEX, userIdTypeRequestDto.userId());
             statement.setObject(SECOND_INDEX, LocalDate.now());
-            statement.setObject(THIRD_INDEX, LocalDate.now().plusDays(7));
+            statement.setObject(THIRD_INDEX, LocalDate.now().plusDays(daysAmount(userIdTypeRequestDto)));
             statement.setString(4, title);
             statement.setString(5, author);
 
             if (statement.executeUpdate() != INVALID_ID) {
-                changeAvailability(title, author);
+                status = changeAvailability(title, author);
             }
 
-            connection.commit();
-        } catch (Exception e) {
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
+            if (status != 0) {
+                connection.commit();
+            } else {
+                connection.rollback();
             }
+            connection.setAutoCommit(true);
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+
     }
 
-    private void changeAvailability(String title, String author) {
-        
+    private int changeAvailability(String title, String author) {
+        String query = "UPDATE %s SET available = false WHERE title = ? and author = ?;".formatted(BOOK_TABLE);
+        int status = 0;
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(FIRST_INDEX, title);
+            statement.setString(SECOND_INDEX, author);
+            status = statement.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return status;
     }
 
-    public BookAvailableResponseDto isBookAvailable(String title, String author) {
+    private Long daysAmount(UserIdTypeRequestDto userIdTypeRequestDto) {
+        if (userIdTypeRequestDto.type().toString().equalsIgnoreCase("STUDENT")) {
+            return 14L;
+        } else if (userIdTypeRequestDto.type().toString().equalsIgnoreCase("FACULTY")) {
+            return 30L;
+        }
+        return 7L;
+    }
+
+    public Optional<BookAvailableResponseDto> isBookAvailable(String title, String author) {
         String query = "SELECT title, author, available FROM %s WHERE title = ? AND author = ?".formatted(BOOK_TABLE);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(FIRST_INDEX, title);
             statement.setString(SECOND_INDEX, author);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                return new BookAvailableResponseDto(resultSet.getString("isbn"));
+                return Optional.of(new BookAvailableResponseDto(resultSet.getString("isbn")));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return null;
+        return Optional.empty();
     }
 
     private static BookDataResponseDto builder(ResultSet resultSet) throws SQLException {

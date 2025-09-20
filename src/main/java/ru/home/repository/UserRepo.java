@@ -2,10 +2,12 @@ package ru.home.repository;
 
 import ru.home.dto.request.UserCreateRequestDto;
 import ru.home.dto.request.UserUpdateRequestDto;
+import ru.home.dto.response.BookBorrowedResponseDto;
 import ru.home.dto.response.UserByIdResponseDto;
 import ru.home.dto.response.UserByTypeResponseDto;
-import ru.home.dto.response.UserPrintAllResponseDto;
+import ru.home.dto.response.UserInfoResponseDto;
 import ru.home.exception.DataBaseConnectionException;
+import ru.home.model.UserType;
 import ru.home.util.DatabaseConnection;
 
 import java.sql.Connection;
@@ -14,10 +16,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class UserRepo {
     private final String USER_TABLE = "users";
@@ -73,49 +77,51 @@ public class UserRepo {
         }
     }
 
-    public UserByIdResponseDto getUserInfoById(Long id) {
+    public Optional<UserByIdResponseDto> getUserInfoById(Long id) {
         String queryUserInfo = "SELECT name, email, user_type FROM %s WHERE id = ?".formatted(USER_TABLE);
-        UserByIdResponseDto user = null;
-
         try (PreparedStatement statement = connection.prepareStatement(queryUserInfo)) {
             statement.setLong(FIRST_INDEX, id);
             ResultSet resultSet = statement.executeQuery();
-
             if (resultSet.next()) {
-                user = new UserByIdResponseDto(resultSet.getString("name"),
+                return Optional.of(new UserByIdResponseDto(resultSet.getString("name"),
                         resultSet.getString("email"),
                         resultSet.getString("user_type"),
-                        new ArrayList<>());
-            } else {
-                throw new IllegalArgumentException("No user in library with id %d".formatted(id));
+                        new ArrayList<>()));
             }
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
-        return user;
+        return Optional.empty();
     }
 
-    public List<UserPrintAllResponseDto> printAllUsers() {
-        String query ="SELECT id, name, email, user_type FROM %s;".formatted(USER_TABLE);
-        List<UserPrintAllResponseDto> listUsers = new ArrayList<>();
-        try(PreparedStatement statement = connection.prepareStatement(query)) {
+    public Map<Long, UserInfoResponseDto> listAllUsers() {
+        String query = """
+                SELECT id,name,email,user_type,title,author,borrow_day,return_day FROM %s
+                JOIN borrowed_books ON user_id = id
+                JOIN books ON borrowed_books.isbn = books.isbn;
+                """.formatted(USER_TABLE);
+        Map<Long, UserInfoResponseDto> usersMap = new HashMap<>();
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                listUsers.add(
-                        new UserPrintAllResponseDto(
-                                resultSet.getLong("id"),
-                                resultSet.getString("name"),
-                                resultSet.getString("email"),
-                                resultSet.getString("user_type"),
-                                new ArrayList<>())
-                );
+                if (!usersMap.containsKey(resultSet.getLong("id"))) {
+                    usersMap.put(resultSet.getLong("id"),
+                            new UserInfoResponseDto(
+                                    resultSet.getLong("id"),
+                                    resultSet.getString("name"),
+                                    resultSet.getString("email"),
+                                    UserType.valueOf(resultSet.getString("user_type")),
+                                    new ArrayList<>()));
+
+                    addBorrowedBook(usersMap, resultSet);
+                } else {
+                    addBorrowedBook(usersMap, resultSet);
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return listUsers;
+        return usersMap;
     }
 
     public Map<String, List<UserByTypeResponseDto>> sortUsersByType() {
@@ -144,6 +150,19 @@ public class UserRepo {
                 resultSet.getString("name"),
                 resultSet.getString("email"),
                 resultSet.getString("user_type"));
+    }
+
+    private static void addBorrowedBook(Map<Long, UserInfoResponseDto> usersMap, ResultSet resultSet)
+            throws SQLException
+    {
+        usersMap.get(resultSet.getLong("id")).listBooks().add(
+                new BookBorrowedResponseDto(
+                        resultSet.getString("title"),
+                        resultSet.getString("author"),
+                        (LocalDate) resultSet.getObject("borrow_day", LocalDate.class),
+                        (LocalDate) resultSet.getObject("return_day", LocalDate.class)
+                )
+        );
     }
 
 }

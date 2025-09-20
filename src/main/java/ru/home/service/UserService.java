@@ -3,18 +3,15 @@ package ru.home.service;
 import ru.home.dto.request.UserCreateRequestDto;
 import ru.home.dto.request.UserUpdateRequestDto;
 import ru.home.dto.response.UserByIdResponseDto;
-import ru.home.dto.response.UserPrintAllResponseDto;
-
-import java.util.List;
 
 public interface UserService {
-    Long createUser(UserCreateRequestDto userCreateRequestDto);
+    void createUser(UserCreateRequestDto userCreateRequestDto);
 
-    UserByIdResponseDto getUserInfoById (Long id);
+    void getUserInfoById (Long id);
 
-    List<UserPrintAllResponseDto> printAllUsers();
+    void listAllUsers();
 
-    boolean removeUser(Long id);
+    void removeUser(Long id);
 
     boolean updateUserInfo(Long id, UserUpdateRequestDto userUpdateRequestDto);
 
