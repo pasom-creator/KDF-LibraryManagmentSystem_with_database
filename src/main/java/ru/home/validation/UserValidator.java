@@ -31,7 +31,7 @@ public final class UserValidator {
         }
     }
 
-    public static void userId(Long id) {
+    public static void userIdValidator(Long id) {
         if(Objects.nonNull(id) && id <= 0L) {
             throw new IllegalArgumentException("Id пользователя должно быть больше 0");
         }

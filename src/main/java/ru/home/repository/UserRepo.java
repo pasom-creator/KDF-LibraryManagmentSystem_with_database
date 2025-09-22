@@ -1,6 +1,7 @@
 package ru.home.repository;
 
 import ru.home.dto.request.UserCreateRequestDto;
+import ru.home.dto.request.UserIdTypeRequestDto;
 import ru.home.dto.response.BookBorrowedResponseDto;
 import ru.home.dto.response.UserByIdResponseDto;
 import ru.home.dto.response.UserByTypeResponseDto;
@@ -145,6 +146,25 @@ public class UserRepo {
             throw new RuntimeException(e);
         }
         return Optional.empty();
+    }
+
+    public boolean checkUserBookLimit(UserIdTypeRequestDto userIdTypeRequestDto) {
+        String query = """
+                SELECT
+                    u.user_type,
+                    COUNT(bb.user_id) as books_borrowed_count
+                FROM users u
+                LEFT JOIN borrowed_books bb ON u.id = bb.user_id
+                WHERE u.id = ?
+                GROUP BY u.user_type;
+                """;
+        try(var statement = connection.prepareStatement(query)) {
+            statement.setLong(FIRST_INDEX, userIdTypeRequestDto.userId());
+            ResultSet resultSet = statement.executeQuery();
+            return resultSet.next() && resultSet.getInt("books_borrowed_count") <= userIdTypeRequestDto.type().getBookAmount();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private UserByTypeResponseDto builder(ResultSet resultSet) throws SQLException {

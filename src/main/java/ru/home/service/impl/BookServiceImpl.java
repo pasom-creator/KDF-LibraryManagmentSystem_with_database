@@ -1,29 +1,27 @@
 package ru.home.service.impl;
 
 import ru.home.dto.request.BookCreateRequestDto;
-import ru.home.dto.request.UserIdTypeRequestDto;
 import ru.home.dto.response.BookAuthorResponseDto;
-import ru.home.dto.response.BookBorrowedResponseDto;
 import ru.home.dto.response.BookDataResponseDto;
 import ru.home.repository.BookRepo;
 import ru.home.service.BookService;
-import ru.home.service.LibraryService;
+import ru.home.validation.BookValidator;
 
 import java.util.List;
 import java.util.Set;
 
-public class BookServiceImpl implements BookService, LibraryService {
-    private final BookRepo bookStore;
+public class BookServiceImpl implements BookService {
+    private final BookRepo BOOK_STORE;
 
     public BookServiceImpl() {
-        this.bookStore = new BookRepo();
+        this.BOOK_STORE = new BookRepo();
     }
 
     @Override
     public void addBook(BookCreateRequestDto bookCreateRequestDto) {
-        Long bookId = bookStore.creatBook(bookCreateRequestDto);
+        Long bookId = BOOK_STORE.creatBook(bookCreateRequestDto);
         if (bookId != 0) {
-            System.out.printf("Книга с id %d успешно добавлена", bookId);
+            System.out.printf("Книга с id %d успешно добавлена\n", bookId);
         } else {
             System.out.println("Произошла ошибка при добавление книги. Повторите попытку");
         }
@@ -31,45 +29,41 @@ public class BookServiceImpl implements BookService, LibraryService {
 
     @Override
     public boolean removeBook(String isbn) {
-        return bookStore.removeBook(isbn);
+        if (BookValidator.fieldValidator(isbn)) {
+            return BOOK_STORE.removeBook(isbn);
+        } else {
+            throw new IllegalArgumentException("Поле не может быть пустым");
+        }
+
     }
 
     @Override
-    public List<BookDataResponseDto> listAllBooks() {
-        return bookStore.listAllBooks();
+    public void listAllBooks() {
+        List<BookDataResponseDto> listBooks = BOOK_STORE.listAllBooks();
+        if(!listBooks.isEmpty()) {
+            for (BookDataResponseDto book : listBooks) {
+                System.out.println(book);
+            }
+        } else {
+            System.out.println("Список книг пуст");
+        }
     }
 
     @Override
-    public Set<BookAuthorResponseDto> listBookAuthors() {
-        return bookStore.listBookAuthors();
+    public void listBookAuthors() {
+        Set<BookAuthorResponseDto> authorSet = BOOK_STORE.listBookAuthors();
+        if(!authorSet.isEmpty()) {
+            for (BookAuthorResponseDto author : authorSet) {
+                System.out.println(author);
+            }
+        } else {
+            System.out.println("Список книг пуст");
+        }
     }
 
     @Override
     public BookDataResponseDto searchBookByParameter(String parameter, String input) {
-        return bookStore.searchBookByParameter(parameter, input);
+        return BOOK_STORE.searchBookByParameter(parameter, input);
     }
-
-    @Override
-    public void borrowBook(String isbn, UserIdTypeRequestDto userIdTypeRequestDto) {
-        if (bookStore.borrowBook(isbn,userIdTypeRequestDto)) {
-            System.out.printf("Вы успешно взяли книгу с isbn %s\n", isbn);
-        } else {
-            System.out.printf("Не удалось взять книгу с isbn %s\n",isbn);
-        }
-    }
-
-    @Override
-    public void returnBook(String isbn) {
-        if (bookStore.returnBook(isbn)) {
-            System.out.printf("Вы успешно вернули книгу с isbn %s\n",isbn);
-        } else {
-            System.out.printf("Не удалось вернуть книгу с isbn %s\n",isbn);
-        }
-    }
-
-    public List<BookBorrowedResponseDto> getUserBooksByUserId(Long id) {
-        return bookStore.getUserBooksByUserId(id);
-    }
-
 
 }

@@ -100,7 +100,7 @@ public class BookRepo {
         }
     }
 
-    public List<BookBorrowedResponseDto> getUserBooksByUserId(Long id) {
+    public List<BookBorrowedResponseDto> searchBorrowedBooksByUserId(Long id) {
         List<BookBorrowedResponseDto> listBooks = new ArrayList<>();
         String queryBorrowedBooks = """
                 SELECT books.title, books.author, borrowed_books.borrow_day, borrowed_books.return_day

@@ -6,4 +6,6 @@ public interface LibraryService {
     void borrowBook(String isbn, UserIdTypeRequestDto userIdTypeRequestDto);
 
     void returnBook(String isbn);
+
+    void searchBorrowedBooksByUserId(Long id);
 }

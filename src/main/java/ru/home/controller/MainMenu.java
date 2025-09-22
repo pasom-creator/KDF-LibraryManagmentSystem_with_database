@@ -28,7 +28,7 @@ public class MainMenu extends GeneralMenu{
     }
 
     private void bookControlMenu() {
-
+        new BookControlMenu(this).start();
     }
 
     private void libraryServiceMenu() {
