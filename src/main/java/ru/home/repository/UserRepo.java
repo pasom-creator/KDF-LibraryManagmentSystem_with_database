@@ -135,10 +135,10 @@ public class UserRepo {
 
     public Optional<UserTypeByIdResponseDto> getUserTypeById(Long id) {
         String query = "SELECT user_type FROM %s WHERE id = ?;".formatted(USER_TABLE);
-        try(PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setLong(FIRST_INDEX,id);
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setLong(FIRST_INDEX, id);
             ResultSet resultSet = statement.executeQuery();
-            if(resultSet.next()) {
+            if (resultSet.next()) {
                 return Optional.of(
                         new UserTypeByIdResponseDto(UserType.valueOf(resultSet.getString("user_type"))));
             }
@@ -158,7 +158,7 @@ public class UserRepo {
                 WHERE u.id = ?
                 GROUP BY u.user_type;
                 """;
-        try(var statement = connection.prepareStatement(query)) {
+        try (var statement = connection.prepareStatement(query)) {
             statement.setLong(FIRST_INDEX, userIdTypeRequestDto.userId());
             ResultSet resultSet = statement.executeQuery();
             return resultSet.next() && resultSet.getInt("books_borrowed_count") <= userIdTypeRequestDto.type().getBookAmount();
@@ -176,14 +176,13 @@ public class UserRepo {
     }
 
     private static void addBorrowedBook(Map<Long, UserInfoResponseDto> usersMap, ResultSet resultSet)
-            throws SQLException
-    {
+            throws SQLException {
         usersMap.get(resultSet.getLong("id")).listBooks().add(
                 new BookBorrowedResponseDto(
                         resultSet.getString("title"),
                         resultSet.getString("author"),
-                        (LocalDate) resultSet.getObject("borrow_day", LocalDate.class),
-                        (LocalDate) resultSet.getObject("return_day", LocalDate.class)
+                        resultSet.getObject("borrow_day", LocalDate.class),
+                        resultSet.getObject("return_day", LocalDate.class)
                 )
         );
     }

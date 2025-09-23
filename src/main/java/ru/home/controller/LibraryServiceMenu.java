@@ -4,7 +4,7 @@ import ru.home.dto.request.UserIdTypeRequestDto;
 import ru.home.service.impl.LibraryServiceImpl;
 import ru.home.util.ConsoleReader;
 
-public class LibraryServiceMenu extends GeneralMenu{
+public class LibraryServiceMenu extends GeneralMenu {
     private final static String LIBRARY_MENU = """
             
             1 - Взять книгу
@@ -18,18 +18,18 @@ public class LibraryServiceMenu extends GeneralMenu{
     public LibraryServiceMenu(MainMenu menu) {
         super(LIBRARY_MENU);
         this.LIBRARY_SERVICE = new LibraryServiceImpl();
-        GENERAL_MAP.put("1",this::borrowBook);
-        GENERAL_MAP.put("2",this::returnBook);
-        GENERAL_MAP.put("3",this::listOverdueBooks);
-        GENERAL_MAP.put("4",this::listBorrowedBooksByUserId);
-        GENERAL_MAP.put("0",menu::mainMenu);
+        GENERAL_MAP.put("1", this::borrowBook);
+        GENERAL_MAP.put("2", this::returnBook);
+        GENERAL_MAP.put("3", this::listOverdueBooks);
+        GENERAL_MAP.put("4", this::listBorrowedBooksByUserId);
+        GENERAL_MAP.put("0", menu::mainMenu);
     }
 
     private void borrowBook() {
         String isbn = getIsbn();
         try {
             Long userId = getUserId();
-            LIBRARY_SERVICE.borrowBook(isbn,builder(userId));
+            LIBRARY_SERVICE.borrowBook(isbn, builder(userId));
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
@@ -45,7 +45,7 @@ public class LibraryServiceMenu extends GeneralMenu{
     }
 
     private void listBorrowedBooksByUserId() {
-        try{
+        try {
             Long userId = getUserId();
             LIBRARY_SERVICE.searchBorrowedBooksByUserId(userId);
         } catch (NumberFormatException e) {
@@ -58,10 +58,10 @@ public class LibraryServiceMenu extends GeneralMenu{
     }
 
     private Long getUserId() {
-    return Long.parseLong(ConsoleReader.askQuestion("Введите id пользователя: "));
+        return Long.parseLong(ConsoleReader.askQuestion("Введите id пользователя: "));
     }
 
     private UserIdTypeRequestDto builder(Long userId) {
-        return new UserIdTypeRequestDto(userId,LIBRARY_SERVICE.getUserTypeById(userId));
+        return new UserIdTypeRequestDto(userId, LIBRARY_SERVICE.getUserTypeById(userId));
     }
 }

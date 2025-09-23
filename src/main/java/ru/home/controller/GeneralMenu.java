@@ -21,7 +21,7 @@ public abstract class GeneralMenu {
                 Runnable runnable = null;
                 runnable = GENERAL_MAP.get(ConsoleReader.askQuestion(options));
 
-                if(Objects.nonNull(runnable)) {
+                if (Objects.nonNull(runnable)) {
                     runnable.run();
                 } else {
                     System.out.println("Можнно вводить только цифры. Попробуйте снова");

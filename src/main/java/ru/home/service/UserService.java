@@ -5,7 +5,7 @@ import ru.home.dto.request.UserCreateRequestDto;
 public interface UserService {
     void createUser(UserCreateRequestDto userCreateRequestDto);
 
-    void getUserInfoById (Long id);
+    void getUserInfoById(Long id);
 
     void listAllUsers();
 

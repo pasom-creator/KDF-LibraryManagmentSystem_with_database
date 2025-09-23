@@ -14,7 +14,7 @@ public final class UserValidator {
             throw new IllegalArgumentException("Имя пользователя не может быть пустым");
         }
 
-        if(name.length() > 100) {
+        if (name.length() > 100) {
             throw new IllegalArgumentException("Имя пользователя не должно быть более 100 символов");
         }
 
@@ -32,7 +32,7 @@ public final class UserValidator {
     }
 
     public static void userIdValidator(Long id) {
-        if(Objects.nonNull(id) && id <= 0L) {
+        if (Objects.nonNull(id) && id <= 0L) {
             throw new IllegalArgumentException("Id пользователя должно быть больше 0");
         }
         System.out.println("Валидация id пользователя прошла успешно");

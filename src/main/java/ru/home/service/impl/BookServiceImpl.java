@@ -18,12 +18,19 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public void addBook(BookCreateRequestDto bookCreateRequestDto) {
-        Long bookId = BOOK_STORE.creatBook(bookCreateRequestDto);
-        if (bookId != 0) {
-            System.out.printf("Книга с id %d успешно добавлена\n", bookId);
+    public void createBook(BookCreateRequestDto bookCreateRequestDto) {
+        if (BookValidator.bookDetailsValidator(
+                bookCreateRequestDto.isbn(),
+                bookCreateRequestDto.title(),
+                bookCreateRequestDto.author())) {
+            Long bookId = BOOK_STORE.creatBook(bookCreateRequestDto);
+            if (bookId != 0) {
+                System.out.printf("Книга с id %d успешно добавлена\n", bookId);
+            } else {
+                System.out.println("Произошла ошибка при добавление книги. Повторите попытку");
+            }
         } else {
-            System.out.println("Произошла ошибка при добавление книги. Повторите попытку");
+            System.out.println("Поля не могут быть пустыми");
         }
     }
 
@@ -40,7 +47,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public void listAllBooks() {
         List<BookDataResponseDto> listBooks = BOOK_STORE.listAllBooks();
-        if(!listBooks.isEmpty()) {
+        if (!listBooks.isEmpty()) {
             for (BookDataResponseDto book : listBooks) {
                 System.out.println(book);
             }
@@ -52,7 +59,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public void listBookAuthors() {
         Set<BookAuthorResponseDto> authorSet = BOOK_STORE.listBookAuthors();
-        if(!authorSet.isEmpty()) {
+        if (!authorSet.isEmpty()) {
             for (BookAuthorResponseDto author : authorSet) {
                 System.out.println(author);
             }

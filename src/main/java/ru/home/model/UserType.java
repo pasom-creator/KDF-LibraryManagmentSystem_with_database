@@ -1,7 +1,7 @@
 package ru.home.model;
 
 public enum UserType {
-    GUEST(1),STUDENT(3),FACULTY(10);
+    GUEST(1), STUDENT(3), FACULTY(10);
 
     private final int bookAmount;
 

@@ -23,15 +23,15 @@ public class UserControlMenu extends GeneralMenu {
     public UserControlMenu(MainMenu menu) {
         super(USER_CONTROL_MENU);
         this.USER_SERVICE = new UserServiceImpl();
-        GENERAL_MAP.put("1",this::createUser);
-        GENERAL_MAP.put("2",this::deleteUser);
-        GENERAL_MAP.put("3",this::sortUsersByType);
-        GENERAL_MAP.put("4",this::getUserInfoById);
-        GENERAL_MAP.put("5",this::listAllUsers);
-        GENERAL_MAP.put("0",menu::mainMenu);
+        GENERAL_MAP.put("1", this::createUser);
+        GENERAL_MAP.put("2", this::deleteUser);
+        GENERAL_MAP.put("3", this::sortUsersByType);
+        GENERAL_MAP.put("4", this::getUserInfoById);
+        GENERAL_MAP.put("5", this::listAllUsers);
+        GENERAL_MAP.put("0", menu::mainMenu);
     }
 
-    private void createUser(){
+    private void createUser() {
         try {
             USER_SERVICE.createUser(builderUserCreateRequestDto());
         } catch (IllegalArgumentException e) {
@@ -71,10 +71,10 @@ public class UserControlMenu extends GeneralMenu {
                     2 - Student
                     3 - Faculty
                 """;
-        Map<Integer, UserType> userTypeMap = Map.of (
-                1,UserType.GUEST,
-                2,UserType.STUDENT,
-                3,UserType.FACULTY
+        Map<Integer, UserType> userTypeMap = Map.of(
+                1, UserType.GUEST,
+                2, UserType.STUDENT,
+                3, UserType.FACULTY
         );
         int userTypeChoice = 0;
 
@@ -90,7 +90,7 @@ public class UserControlMenu extends GeneralMenu {
             }
         }
 
-        return new UserCreateRequestDto(name,email,userTypeMap.get(userTypeChoice));
+        return new UserCreateRequestDto(name, email, userTypeMap.get(userTypeChoice));
     }
 
     private Long enterUserId() throws NumberFormatException {

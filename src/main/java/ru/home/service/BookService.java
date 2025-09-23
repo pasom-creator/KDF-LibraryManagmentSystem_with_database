@@ -4,7 +4,7 @@ import ru.home.dto.request.BookCreateRequestDto;
 import ru.home.dto.response.BookDataResponseDto;
 
 public interface BookService {
-    void addBook(BookCreateRequestDto bookCreateRequestDto);
+    void createBook(BookCreateRequestDto bookCreateRequestDto);
 
     void listAllBooks();
 

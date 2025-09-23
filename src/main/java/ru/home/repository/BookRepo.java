@@ -26,6 +26,7 @@ public class BookRepo {
     private final int FIRST_INDEX = 1;
     private final int SECOND_INDEX = 2;
     private final int THIRD_INDEX = 3;
+    private final int FOURTH_INDEX = 4;
 
     public BookRepo() {
         try {
@@ -43,7 +44,7 @@ public class BookRepo {
             statement.setString(THIRD_INDEX, bookCreateRequestDto.author());
             statement.executeUpdate();
             ResultSet bookId = statement.getGeneratedKeys();
-            if(bookId.next()) return bookId.getLong("id");
+            if (bookId.next()) return bookId.getLong("id");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -131,7 +132,7 @@ public class BookRepo {
                 """;
         try (PreparedStatement statement = connection.prepareStatement(queryOverdueBooks)) {
             ResultSet resultSet = statement.executeQuery();
-            while(resultSet.next()) {
+            while (resultSet.next()) {
                 addBorrowedBooks(listBooks, resultSet);
             }
         } catch (SQLException e) {
@@ -151,7 +152,7 @@ public class BookRepo {
             statement.setLong(FIRST_INDEX, userIdTypeRequestDto.userId());
             statement.setObject(SECOND_INDEX, LocalDate.now());
             statement.setObject(THIRD_INDEX, LocalDate.now().plusDays(daysAmount(userIdTypeRequestDto)));
-            statement.setString(4, isbn);
+            statement.setString(FOURTH_INDEX, isbn);
 
             return commitChanges(statement, isbn, false);
         } catch (SQLException e) {
@@ -161,9 +162,9 @@ public class BookRepo {
 
     public boolean returnBook(String isbn) {
         String query = "DELETE FROM borrowed_books WHERE isbn = ?";
-        try(PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             connection.setAutoCommit(false);
-            statement.setString(FIRST_INDEX,isbn);
+            statement.setString(FIRST_INDEX, isbn);
 
             return commitChanges(statement, isbn, true);
         } catch (SQLException e) {

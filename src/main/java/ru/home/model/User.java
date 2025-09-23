@@ -5,8 +5,8 @@ import java.util.List;
 
 public class User {
     private Long userId;
-    private String name;
-    private String email;
+    private final String name;
+    private final String email;
     private final List<BorrowedBook> BORROWED_BOOKS;
 
     public User(String name, String email) {
