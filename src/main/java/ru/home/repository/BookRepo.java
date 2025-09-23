@@ -113,12 +113,26 @@ public class BookRepo {
             statement.setLong(FIRST_INDEX, id);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                listBooks.add(new BookBorrowedResponseDto(
-                        resultSet.getString("title"),
-                        resultSet.getString("author"),
-                        resultSet.getObject("borrow_day", LocalDate.class),
-                        resultSet.getObject("return_day", LocalDate.class)
-                ));
+                addBorrowedBooks(listBooks, resultSet);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return listBooks;
+    }
+
+    public List<BookBorrowedResponseDto> listOverdueBooks() {
+        List<BookBorrowedResponseDto> listBooks = new ArrayList<>();
+        String queryOverdueBooks = """
+                SELECT books.title, books.author, b.borrow_day, b.return_day
+                FROM borrowed_books b
+                JOIN books ON b.isbn = books.isbn
+                WHERE b.return_day < CURRENT_DATE;
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(queryOverdueBooks)) {
+            ResultSet resultSet = statement.executeQuery();
+            while(resultSet.next()) {
+                addBorrowedBooks(listBooks, resultSet);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -198,5 +212,15 @@ public class BookRepo {
                 resultSet.getString("isbn"),
                 resultSet.getString("author"),
                 resultSet.getString("title"));
+    }
+
+    private static void addBorrowedBooks(List<BookBorrowedResponseDto> listBooks, ResultSet resultSet)
+            throws SQLException {
+        listBooks.add(new BookBorrowedResponseDto(
+                resultSet.getString("title"),
+                resultSet.getString("author"),
+                resultSet.getObject("borrow_day", LocalDate.class),
+                resultSet.getObject("return_day", LocalDate.class)
+        ));
     }
 }

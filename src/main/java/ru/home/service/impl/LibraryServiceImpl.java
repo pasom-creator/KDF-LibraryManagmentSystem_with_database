@@ -57,6 +57,18 @@ public class LibraryServiceImpl implements LibraryService {
 
     }
 
+    @Override
+    public void listOverdueBooks() {
+        List<BookBorrowedResponseDto> bookList = BOOK_STORE.listOverdueBooks();
+        if(!bookList.isEmpty()) {
+            for (BookBorrowedResponseDto book : bookList) {
+                System.out.println(book);
+            }
+        } else {
+            System.out.println("Нету просроченых книг");
+        }
+    }
+
     public UserType getUserTypeById(Long id) {
         UserValidator.userIdValidator(id);
         Optional<UserTypeByIdResponseDto> optUserType = USER_STORAGE.getUserTypeById(id);

@@ -8,4 +8,6 @@ public interface LibraryService {
     void returnBook(String isbn);
 
     void searchBorrowedBooksByUserId(Long id);
+
+    void listOverdueBooks();
 }

@@ -27,8 +27,12 @@ public class LibraryServiceMenu extends GeneralMenu{
 
     private void borrowBook() {
         String isbn = getIsbn();
-        Long userId = Long.parseLong(ConsoleReader.askQuestion("Введите id пользователя: "));
-        LIBRARY_SERVICE.borrowBook(isbn,builder(userId));
+        try {
+            Long userId = getUserId();
+            LIBRARY_SERVICE.borrowBook(isbn,builder(userId));
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private void returnBook() {
@@ -37,15 +41,24 @@ public class LibraryServiceMenu extends GeneralMenu{
     }
 
     private void listOverdueBooks() {
-        System.out.println("Test overdue book");
+        LIBRARY_SERVICE.listOverdueBooks();
     }
 
     private void listBorrowedBooksByUserId() {
-
+        try{
+            Long userId = getUserId();
+            LIBRARY_SERVICE.searchBorrowedBooksByUserId(userId);
+        } catch (NumberFormatException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    private static String getIsbn() {
+    private String getIsbn() {
         return ConsoleReader.askQuestion("Введите isbn книги: ");
+    }
+
+    private Long getUserId() {
+    return Long.parseLong(ConsoleReader.askQuestion("Введите id пользователя: "));
     }
 
     private UserIdTypeRequestDto builder(Long userId) {
